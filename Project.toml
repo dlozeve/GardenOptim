@@ -1,0 +1,13 @@
+name = "GardenOptim"
+uuid = "a9e1c8f2-2681-4423-bf67-1649e7f3cb09"
+authors = ["Dimitri Lozeve <dimitri@lozeve.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
