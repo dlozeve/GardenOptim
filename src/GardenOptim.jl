@@ -1,5 +1,6 @@
 module GardenOptim
 
+using CSV
 using Logging
 
 export update!
@@ -46,5 +47,13 @@ function update!(grid::Array{Int, 2}, costs::Array{Float64, 2}, beta::Float64 = 
     grid
 end
 
+function loadcosts()
+    df = CSV.read("data/costs.csv")
+    df = coalesce.(df, 0)  # replace missing values by 0
+    costs = convert(Matrix, df[:, 2:end])
+    @debug "cost matrix of size $(size(costs))"
+    # ensure the matrix is symmetric: keep the max of itself and its transpose
+    costs = max.(costs, permutedims(costs))
+end
 
 end # module
