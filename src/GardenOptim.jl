@@ -53,7 +53,16 @@ function loadcosts()
     costs = convert(Matrix, df[:, 2:end])
     @debug "cost matrix of size $(size(costs))"
     # ensure the matrix is symmetric: keep the max of itself and its transpose
-    costs = max.(costs, permutedims(costs))
+    costs = Float64.(max.(costs, permutedims(costs)))
+end
+
+function randomgridevolution(costs::Array{Float64, 2}, gardensize::Int = 50, steps::Int = 10000)
+    m = size(costs, 1)
+    grid = rand(1:m, gardensize, gardensize)
+    for i = 1:steps
+        update!(grid, costs, 10.0)
+    end
+    grid
 end
 
 end # module
