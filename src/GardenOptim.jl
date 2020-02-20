@@ -6,13 +6,13 @@ using Tables
 
 export loadplants, loadgarden, loadcosts, update!, randomgardenevolution!, outputgarden
 
-function loadplants()
+function loadplants()::Vector{String}
     plants = readlines("data/plants.txt")
     @info "loaded $(length(plants)) plants"
     plants
 end
 
-function loadgarden(plants)
+function loadgarden(plants::Vector{String})::Tuple{Matrix{Int}, Matrix{Bool}}
     garden = CSV.read("data/garden.csv")
     garden = coalesce.(garden, "")
     mask = convert(Matrix, garden .== "empty")
@@ -23,7 +23,7 @@ function loadgarden(plants)
     garden, mask
 end
 
-function loadcosts()
+function loadcosts()::Matrix{Float64}
     df = CSV.read("data/costs.csv")
     df = coalesce.(df, 0)  # replace missing values by 0
     costs = convert(Matrix, df[:, 2:end])
@@ -32,7 +32,7 @@ function loadcosts()
     costs = Float64.(max.(costs, permutedims(costs)))
 end
 
-function randomindex(mask::Matrix{Bool})
+function randomindex(mask::Matrix{Bool})::Int
     while true
         i = rand(1:length(mask))
         if mask[i]
@@ -48,7 +48,7 @@ function swap!(garden::Matrix{Int}, i::Int, j::Int)
     garden
 end
 
-function neighbours(garden::Matrix{Int}, idx)
+function neighbours(garden::Matrix{Int}, idx::Int)::Vector{Int}
     m, n = size(garden)
     j, i = divrem(idx - 1, m)
     i += 1
@@ -61,7 +61,7 @@ function neighbours(garden::Matrix{Int}, idx)
     ]
 end
 
-function deltacost(garden::Matrix{Int}, costs::Matrix{Float64}, i::Int, j::Int)
+function deltacost(garden::Matrix{Int}, costs::Matrix{Float64}, i::Int, j::Int)::Float64
     cost = 0
     for k in neighbours(garden, i)
         cost += costs[k, garden[j]] - costs[k, garden[i]]
