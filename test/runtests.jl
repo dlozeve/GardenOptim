@@ -2,6 +2,10 @@ using GardenOptim
 using Test
 
 @testset "GardenOptim.jl" begin
+    @testset "randomindex" begin
+        mask = rand(Bool, 5, 5)
+        @test mask[GardenOptim.randomindex(mask)]
+    end
     @testset "swap" begin
         grid = ones(Int, 5, 5)
         grid[2] = 5
@@ -18,6 +22,8 @@ using Test
         @test length(GardenOptim.neighbours(grid, 8)) == 4
         @test length(GardenOptim.neighbours(grid, 25)) == 2
         @test GardenOptim.neighbours(grid, 1) == [1, 1]
+        grid[3] = 0
+        @test length(GardenOptim.neighbours(grid, 4)) == 2
     end
     @testset "deltacost" begin
         grid = ones(Int, 5, 5)
