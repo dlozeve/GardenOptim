@@ -1,10 +1,17 @@
 module GardenOptim
 
+using DocStringExtensions
 using Logging
 using CSV
 using Tables
 
 export loadplants, loadgarden, loadcosts, update!, randomgardenevolution!, outputgarden
+
+@template (FUNCTIONS, METHODS, MACROS) =
+    """
+    $(TYPEDSIGNATURES)
+    $(DOCSTRING)
+    """
 
 function loadplants()::Vector{String}
     plants = readlines("data/plants.txt")
@@ -32,6 +39,7 @@ function loadcosts()::Matrix{Float64}
     costs = Float64.(max.(costs, permutedims(costs)))
 end
 
+"Return a random index to be filled from the garden mask."
 function randomindex(mask::Matrix{Bool})::Int
     while true
         i = rand(1:length(mask))
@@ -41,6 +49,7 @@ function randomindex(mask::Matrix{Bool})::Int
     end
 end
 
+"Swap to the elements corresponding to the two provided indices."
 function swap!(garden::Matrix{Int}, i::Int, j::Int)
     t = garden[i]
     garden[i] = garden[j]
@@ -48,6 +57,7 @@ function swap!(garden::Matrix{Int}, i::Int, j::Int)
     garden
 end
 
+"Return the neighbours to be filled of the cell at the given index."
 function neighbours(garden::Matrix{Int}, idx::Int)::Vector{Int}
     m, n = size(garden)
     j, i = divrem(idx - 1, m)
@@ -61,6 +71,7 @@ function neighbours(garden::Matrix{Int}, idx::Int)::Vector{Int}
     ]
 end
 
+"Compute the cost difference when swapping the two provided indices."
 function deltacost(garden::Matrix{Int}, costs::Matrix{Float64}, i::Int, j::Int)::Float64
     cost = 0
     for k in neighbours(garden, i)
@@ -72,6 +83,7 @@ function deltacost(garden::Matrix{Int}, costs::Matrix{Float64}, i::Int, j::Int):
     cost
 end
 
+"Update the garden using Metropolis-Hastings, using the inverse temperature beta."
 function update!(
     garden::Matrix{Int},
     mask::Matrix{Bool},
@@ -93,11 +105,13 @@ function update!(
     garden
 end
 
+"Fill the garden randomly with a predefined number of plants."
 function randomfillgarden!(garden::Matrix{Int}, mask::Matrix{Bool}, plantcount::Int)
     garden[mask] = rand(1:plantcount, sum(mask))
     garden
 end
 
+"Update the garden for a given number of steps, starting from a random initialisation."
 function randomgardenevolution!(
     garden::Matrix{Int},
     mask::Matrix{Bool},
@@ -112,6 +126,7 @@ function randomgardenevolution!(
     garden
 end
 
+"Save the garden to a CSV file."
 function outputgarden(garden::Matrix{Int}, plants::Vector{String})
     output = vcat([""], plants)[garden .+ 1]
     CSV.write("output.csv", Tables.table(output), writeheader=false)
