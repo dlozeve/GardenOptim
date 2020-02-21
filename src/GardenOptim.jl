@@ -1,11 +1,16 @@
 module GardenOptim
 
-using DocStringExtensions
 using Logging
+using Unicode
+
+using DataFrames
+using DocStringExtensions
 using CSV
+using JSON
 using Tables
 
-export loadplants, loadgarden, loadcosts, update!, randomgardenevolution!, outputgarden
+export loadclassification, loadplants, loadgarden, loadcosts
+export update!, randomgardenevolution!, outputgarden
 
 @template (FUNCTIONS, METHODS, MACROS) =
     """
@@ -13,9 +18,36 @@ export loadplants, loadgarden, loadcosts, update!, randomgardenevolution!, outpu
     $(DOCSTRING)
     """
 
-function loadplants()::Vector{String}
-    plants = readlines("data/plants.txt")
-    @info "loaded $(length(plants)) plants"
+mutable struct Classification
+    type::Symbol
+    name::Symbol
+    bio::String
+    children::Vector{Classification}
+    parent::Classification
+
+    function Classification(classif::Dict{String, Any})
+        children = [Classification(d) for d in get(classif, "children", [])]
+        type = Symbol(Unicode.normalize(classif["type"], casefold=true, stripmark=true))
+        name = Symbol(Unicode.normalize(classif["name"], casefold=true, stripmark=true))
+        classif = new(type, name, get(classif, "bio", ""), children)
+        for child in children
+            child.parent = classif
+        end
+        classif
+    end
+end
+
+function loadclassification()
+    clf = JSON.parsefile("data/classification.json")
+    clf = Classification(clf)
+    @debug "loaded classification of type $(clf.type)"
+    clf
+end
+
+function loadplants()::DataFrame
+    plants = CSV.read("data/plants.csv")
+    @info "loaded $(size(plants, 1)) plants"
+    plants.name = Symbol.(plants.name)
     plants
 end
 
@@ -30,13 +62,67 @@ function loadgarden(plants::Vector{String})::Tuple{Matrix{Int}, Matrix{Bool}}
     garden, mask
 end
 
-function loadcosts()::Matrix{Float64}
-    df = CSV.read("data/costs.csv")
-    df = coalesce.(df, 0)  # replace missing values by 0
-    costs = convert(Matrix, df[:, 2:end])
-    @info "loaded cost matrix of size $(size(costs))"
-    # ensure the matrix is symmetric: keep the max of itself and its transpose
-    costs = Float64.(max.(costs, permutedims(costs)))
+function loadcosts()::DataFrame
+    df = CSV.read("data/associations.csv", copycols=true)
+    colnames = String.(names(df))
+    colnames = Symbol.(Unicode.normalize.(colnames, casefold=true, stripmark=true))
+    rename!(df, colnames)
+    df.name = colnames[2:end]
+    # df = coalesce.(df, 0.0)
+    @info "loaded cost matrix for $(size(df, 1)) plants"
+    df
+end
+
+# function loadcosts()::Matrix{Float64}
+#     df = CSV.read("data/costs.csv")
+#     df = coalesce.(df, 0)  # replace missing values by 0
+#     costs = convert(Matrix, df[:, 2:end])
+#     @info "loaded cost matrix of size $(size(costs))"
+#     # ensure the matrix is symmetric: keep the max of itself and its transpose
+#     costs = Float64.(max.(costs, permutedims(costs)))
+# end
+
+function getparent(name::Symbol, classification::Classification)
+    if classification.name == name
+        return classification.parent
+    else
+        for child in classification.children
+            parent = getparent(name, child)
+            if !isnothing(parent)
+                return parent
+            end
+        end
+    end
+end
+
+function computecost(costs::DataFrame, plant1::Symbol, plant2::Symbol, classification::Classification)::Float64
+    @debug "$plant1 and $plant2"
+    if plant1 in names(costs) && plant2 in names(costs)
+        cost = costs[costs.name .== plant1, plant2][1]
+    else
+        @debug "$plant1 and $plant2 not in costs"
+        cost = missing
+    end
+
+    if !ismissing(cost)
+        return cost
+    end
+
+    @debug "missing"
+    try
+        parent1 = getparent(plant1, classification).name
+        computecost(costs, parent1, plant2, classification)
+    catch UndefRefError
+        return missing
+    end
+
+    try
+        parent2 = getparent(plant2, classification).name
+        computecost(costs, plant1, parent2, classification)
+    catch UndefRefError
+        return missing
+    end
+
 end
 
 "Return a random index to be filled from the garden mask."
