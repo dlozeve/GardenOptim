@@ -33,4 +33,5 @@ using Test
         grid[9] = 3
         @test GardenOptim.deltacost(grid, costs, 3, 8) != 0
     end
+    include("classification.jl")
 end
