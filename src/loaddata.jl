@@ -31,27 +31,28 @@ function loadclassification()::Classification
     clf
 end
 
-function loadcostsdf()::DataFrame
+function loadaffinitiesdf()::DataFrame
     df = CSV.read("data/associations.csv", copycols=true)
     colnames = String.(names(df))
     colnames = Symbol.(Unicode.normalize.(colnames, casefold=true, stripmark=true))
     rename!(df, colnames)
     df.name = colnames[2:end]
     # df = coalesce.(df, 0.0)
-    @info "loaded cost matrix for $(size(df, 1)) plants"
+    @info "loaded affinity matrix for $(size(df, 1)) plants"
     df
 end
 
-function computecost(plant1::Symbol, plant2::Symbol, costs_df::DataFrame, classification::Classification)::Float64
+"Compute the cost between two plants, using their families if necessary."
+function computecost(plant1::Symbol, plant2::Symbol, affinities_df::DataFrame, classification::Classification)::Float64
     @debug "computecost($plant1, $plant2)"
-    if plant1 in names(costs_df) && plant2 in names(costs_df)
-        cost = costs_df[costs_df.name .== plant1, plant2][1]
+    if plant1 in names(affinities_df) && plant2 in names(affinities_df)
+        affinity = affinities_df[affinities_df.name .== plant1, plant2][1]
     else
-        cost = missing
+        affinity = missing
     end
 
-    if !ismissing(cost)
-        return cost
+    if !ismissing(affinity)
+        return -affinity
     end
 
     parent1 = getfirstparent(plant1, classification)
@@ -60,24 +61,25 @@ function computecost(plant1::Symbol, plant2::Symbol, costs_df::DataFrame, classi
         return 0.0
     end
     @debug "computecost($(parent1.name), $(parent2.name))"
-    if parent1.name in names(costs_df) && parent2.name in names(costs_df)
-        cost = costs_df[costs_df.name .== parent1.name, parent2.name][1]
+    if parent1.name in names(affinities_df) && parent2.name in names(affinities_df)
+        affinity = affinities_df[affinities_df.name .== parent1.name, parent2.name][1]
     end
 
-    if !ismissing(cost)
-        return cost
+    if !ismissing(affinity)
+        return -affinity
     end
 
     return 0.0
 end
 
-function costsmatrix(plants::Vector{Symbol}, costs_df::DataFrame, classification::Classification)::Matrix{Float64}
-    [computecost(plant1, plant2, costs_df, classification) for plant1 in plants, plant2 in plants]
+"Compute the costs matrix for all plants"
+function costsmatrix(plants::Vector{Symbol}, affinities_df::DataFrame, classification::Classification)::Matrix{Float64}
+    [computecost(plant1, plant2, affinities_df, classification) for plant1 in plants, plant2 in plants]
 end
 
 function loadcosts()
     plants = loadplants()
     clf = loadclassification()
-    costs_df = loadcostsdf()
-    costs = costsmatrix(plants.name, costs_df, clf)
+    affinities_df = loadaffinitiesdf()
+    costs = costsmatrix(plants.name, affinities_df, clf)
 end
