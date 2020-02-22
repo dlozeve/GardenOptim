@@ -1,0 +1,6 @@
+* GardenOptim
+
+[[https://travis-ci.com/dlozeve/GardenOptim][https://travis-ci.com/dlozeve/GardenOptim.svg?branch=master]]
+
+Optimisation of a vegetable garden, based on an affinity matrix
+between plants.
