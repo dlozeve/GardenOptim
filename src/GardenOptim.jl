@@ -17,6 +17,7 @@ export update!, fillgardenrandomly!, gardenevolution!, outputgarden
 include("classification.jl")
 include("loaddata.jl")
 include("mcmc.jl")
+include("optim.jl")
 
 "Save the garden to a CSV file."
 function outputgarden(garden::Matrix{Int}, plants::Vector{Symbol})
