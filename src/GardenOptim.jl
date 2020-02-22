@@ -3,6 +3,7 @@ module GardenOptim
 using Logging
 
 using DocStringExtensions
+using Tables
 
 export loadplants, loadgarden, loadclassification, loadcosts
 export update!, randomgardenevolution!, outputgarden
@@ -18,9 +19,9 @@ include("loaddata.jl")
 include("mcmc.jl")
 
 "Save the garden to a CSV file."
-function outputgarden(garden::Matrix{Int}, plants::Vector{String})
-    output = vcat([""], plants)[garden .+ 1]
-    CSV.write("output.csv", Tables.table(output), writeheader=false)
+function outputgarden(garden::Matrix{Int}, plants::Vector{Symbol})
+    output = vcat([""], String.(plants))[garden .+ 1]
+    CSV.write("out/output.csv", Tables.table(output), writeheader=false)
 end
 
 end # module
