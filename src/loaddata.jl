@@ -7,7 +7,7 @@ using JSON
 
 function loadplants()::DataFrame
     plants = CSV.read("data/plants.csv")
-    @info "loaded $(size(plants, 1)) plants"
+    @info "Loaded $(size(plants, 1)) plants"
     plants.name = Symbol.(plants.name)
     plants
 end
@@ -20,7 +20,7 @@ function loadgarden(plants::Vector{Symbol})::Tuple{Matrix{Int}, Matrix{Bool}}
     garden = indexin(convert(Matrix, garden), String.(plants))
     garden = replace(garden, nothing=>0)
     @assert size(garden) == size(mask)
-    @info "loaded garden of size $(size(garden))"
+    @info "Loaded garden of size $(size(garden))"
     garden, mask
 end
 
@@ -38,7 +38,7 @@ function loadaffinitiesdf()::DataFrame
     rename!(df, colnames)
     df.name = colnames[2:end]
     # df = coalesce.(df, 0.0)
-    @info "loaded affinity matrix for $(size(df, 1)) plants"
+    @info "Loaded affinity matrix for $(size(df, 1)) plants"
     df
 end
 
@@ -77,9 +77,10 @@ function costsmatrix(plants::Vector{Symbol}, affinities_df::DataFrame, classific
     [computecost(plant1, plant2, affinities_df, classification) for plant1 in plants, plant2 in plants]
 end
 
-function loadcosts()
-    plants = loadplants()
+function loadcosts(plants::Vector{Symbol})
     clf = loadclassification()
     affinities_df = loadaffinitiesdf()
-    costs = costsmatrix(plants.name, affinities_df, clf)
+    costs = costsmatrix(plants, affinities_df, clf)
+    @info "Computed costs matrix for $(size(costs, 1)) plants"
+    costs
 end
