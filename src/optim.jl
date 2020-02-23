@@ -1,6 +1,5 @@
 using JuMP
-using Ipopt
-using Juniper
+using MosekTools
 
 function neighbourindices(mask::Matrix, idx::Int)::Vector{Int}
     if mask[idx] == 0
@@ -34,14 +33,12 @@ function definemodel(plantcounts::Vector, garden::Matrix, mask::Matrix, costs::M
     N = length(mask)
     Q = size(costs, 1)
 
-    optimizer = Juniper.Optimizer
-    nl_solver = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0)
-
-    model = Model(optimizer_with_attributes(optimizer, "nl_solver" => nl_solver))
+    optimizer = Mosek.Optimizer
+    model = Model(optimizer_with_attributes(optimizer, "QUIET" => false))
 
     @variable(model, x[1:N, 1:Q], Bin)
 
-    @NLobjective(
+    @objective(
         model,
         Min,
         sum(
