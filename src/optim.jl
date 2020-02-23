@@ -30,7 +30,7 @@ function neighbourmatrix(mask::Matrix)::Matrix{Bool}
     d
 end
 
-function definemodel(plantcounts::Vector, mask::Matrix, costs::Matrix)
+function definemodel(plantcounts::Vector, garden::Matrix, mask::Matrix, costs::Matrix)
     N = length(mask)
     Q = size(costs, 1)
 
@@ -56,6 +56,9 @@ function definemodel(plantcounts::Vector, mask::Matrix, costs::Matrix)
             for q = 1:Q
                 @constraint(model, x[i, q] == 0)
             end
+        end
+        if garden[i] != 0
+            @constraint(model, x[i, garden[i]] == 1)
         end
     end
 
