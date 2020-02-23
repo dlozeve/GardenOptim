@@ -6,7 +6,7 @@ using DocStringExtensions
 using Tables
 
 export loadplants, loadgarden, loadclassification, loadcosts
-export update!, randomgardenevolution!, outputgarden
+export update!, fillgardenrandomly!, gardenevolution!, outputgarden
 
 @template (FUNCTIONS, METHODS, MACROS) =
     """

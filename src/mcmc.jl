@@ -1,4 +1,5 @@
 using Logging
+using Random
 
 "Return a random index to be filled from the garden mask."
 function randomindex(mask::Matrix{Bool})::Int
@@ -66,21 +67,18 @@ function update!(
     garden
 end
 
-"Fill the garden randomly with a predefined number of plants."
-function randomfillgarden!(garden::Matrix{Int}, mask::Matrix{Bool}, plantcount::Int)
-    garden[mask] = rand(1:plantcount, sum(mask))
+"Fill the garden randomly with a predefined number for each plant."
+function fillgardenrandomly!(garden::Matrix{Int}, mask::Matrix{Bool}, plants::DataFrame)
+    cells = vcat([repeat([plant], count) for (plant, count) in eachrow(plants)]...)
+    # fill the remaining slots with random plants
+    diffcount = sum(mask) - length(cells)
+    cells = vcat(cells, rand(cells, diffcount))
+    garden[mask] = shuffle!(indexin(cells, plants.name))
     garden
 end
 
-"Update the garden for a given number of steps, starting from a random initialisation."
-function randomgardenevolution!(
-    garden::Matrix{Int},
-    mask::Matrix{Bool},
-    costs::Matrix{Float64};
-    steps::Int = 10000
-)
-    m = size(costs, 1)
-    garden = randomfillgarden!(garden, mask, m)
+"Update the garden for a given number of steps."
+function gardenevolution!(garden::Matrix{Int}, mask::Matrix{Bool}, costs::Matrix{Float64}; steps::Int = 10000)
     for i = 1:steps
         update!(garden, mask, costs, 10.0)
     end
