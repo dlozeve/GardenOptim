@@ -45,12 +45,27 @@ function deltacost(garden::Matrix{Int}, costs::Matrix{Float64}, i::Int, j::Int):
     cost
 end
 
+"Compute the total cost of a garden configuration."
+function gardencost(garden::Matrix{Int}, mask::Matrix{Bool}, costs::Matrix{Float64})::Float64
+    cost = 0
+    for i = 1:length(mask)
+        if mask[i] == 0
+            continue
+        end
+        for k in neighbours(garden, i)
+            cost += costs[k, garden[i]]
+        end
+    end
+    cost / 2
+end
+
+
 "Update the garden using Metropolis-Hastings, using the inverse temperature beta."
 function update!(
     garden::Matrix{Int},
     mask::Matrix{Bool},
     costs::Matrix{Float64},
-    beta::Float64 = 10.0
+    beta::Float64 = 5.0
 )
     N = length(garden)
     i = randomindex(mask)
@@ -62,9 +77,10 @@ function update!(
     @debug "cost difference $d"
     if rand() < exp(- beta * d)
         @debug "swapping indices $i and $j"
-        return swap!(garden, i, j)
+        swap!(garden, i, j)
+        return d
     end
-    garden
+    return 0.0
 end
 
 "Fill the garden randomly with a predefined number for each plant."
@@ -77,10 +93,14 @@ function fillgardenrandomly!(garden::Matrix{Int}, mask::Matrix{Bool}, plants::Da
     garden
 end
 
-"Update the garden for a given number of steps."
-function gardenevolution!(garden::Matrix{Int}, mask::Matrix{Bool}, costs::Matrix{Float64}; steps::Int = 10000)
+"Update the garden for a given number of steps, and return the total cost over time."
+function gardenevolution!(garden::Matrix{Int}, mask::Matrix{Bool}, costs::Matrix{Float64}; steps::Int = 10000, beta::Float64 = 5.0)
+    gardencosts = [gardencost(garden, mask, costs)]
     for i = 1:steps
-        update!(garden, mask, costs, 10.0)
+        update!(garden, mask, costs, beta)
+        if mod(i, 1000) == 0
+            append!(gardencosts, gardencost(garden, mask, costs))
+        end
     end
-    garden
+    gardencosts
 end
