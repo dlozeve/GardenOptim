@@ -51,7 +51,7 @@ function definemodel(plantcounts::Vector, mask::Matrix, costs::Matrix)
     )
 
     for i = 1:N
-        @constraint(model, sum(x[i, q] for q = 1:Q) == 1)
+        @constraint(model, sum(x[i, q] for q = 1:Q) <= 1)
         if mask[i] == 0
             for q = 1:Q
                 @constraint(model, x[i, q] == 0)
