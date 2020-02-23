@@ -8,9 +8,7 @@ function neighbourindices(mask::Matrix, idx::Int)::Vector{Int}
     end
 
     m, n = size(mask)
-    j, i = divrem(idx - 1, m)
-    i += 1
-    j += 1
+    i, j = Tuple(CartesianIndices(mask)[idx])
     indices = [(i, j-1), (i, j+1), (i-1, j), (i+1, j)]
     # cells filled with 0 are not part of the garden
     cartesianindices = [
