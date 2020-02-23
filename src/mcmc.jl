@@ -22,9 +22,7 @@ end
 "Return the neighbours to be filled of the cell at the given index."
 function neighbours(garden::Matrix{Int}, idx::Int)::Vector{Int}
     m, n = size(garden)
-    j, i = divrem(idx - 1, m)
-    i += 1
-    j += 1
+    i, j = Tuple(CartesianIndices(garden)[idx])
     neighbourindices = [(i, j-1), (i, j+1), (i-1, j), (i+1, j)]
     # cells filled with 0 are not part of the garden
     [
