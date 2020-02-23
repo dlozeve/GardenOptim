@@ -50,7 +50,6 @@ function computecost(plant1::Symbol, plant2::Symbol, affinities_df::DataFrame, c
     else
         affinity = missing
     end
-
     if !ismissing(affinity)
         return -affinity
     end
@@ -60,11 +59,27 @@ function computecost(plant1::Symbol, plant2::Symbol, affinities_df::DataFrame, c
     if isnothing(parent1) || isnothing(parent2)
         return 0.0
     end
+
+    @debug "computecost($(parent1.name), $plant2)"
+    if parent1.name in names(affinities_df) && plant2 in names(affinities_df)
+        affinity = affinities_df[affinities_df.name .== parent1.name, plant2][1]
+    end
+    if !ismissing(affinity)
+        return -affinity
+    end
+
+    @debug "computecost($plant1, $(parent2.name))"
+    if plant1 in names(affinities_df) && parent2.name in names(affinities_df)
+        affinity = affinities_df[affinities_df.name .== plant1, parent2.name][1]
+    end
+    if !ismissing(affinity)
+        return -affinity
+    end
+
     @debug "computecost($(parent1.name), $(parent2.name))"
     if parent1.name in names(affinities_df) && parent2.name in names(affinities_df)
         affinity = affinities_df[affinities_df.name .== parent1.name, parent2.name][1]
     end
-
     if !ismissing(affinity)
         return -affinity
     end
