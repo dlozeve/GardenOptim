@@ -1,5 +1,5 @@
 using JuMP
-using MosekTools
+using CPLEX
 
 function neighbourindices(mask::Matrix, idx::Int)::Vector{Int}
     if mask[idx] == 0
@@ -33,8 +33,9 @@ function definemodel(plantcounts::Vector, garden::Matrix, mask::Matrix, costs::M
     N = length(mask)
     Q = size(costs, 1)
 
-    optimizer = Mosek.Optimizer
-    model = Model(optimizer_with_attributes(optimizer, "QUIET" => false))
+    optimizer = optimizer_with_attributes(
+        CPLEX.Optimizer, "CPX_PARAM_OPTIMALITYTARGET" => 2, "CPX_PARAM_EPINT" => 1e-8)
+    model = Model(optimizer)
 
     @variable(model, x[1:N, 1:Q], Bin)
 
